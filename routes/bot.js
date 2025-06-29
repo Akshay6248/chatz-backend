@@ -1,21 +1,25 @@
 const express = require("express");
+const axios = require("axios");
 const router = express.Router();
-const { OpenAI } = require("openai");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const HF_API_KEY = process.env.HFAPIKEY;
 
 router.post("/ask", async (req, res) => {
   try {
     const prompt = req.body.prompt || req.body.message;
 
-    const chatCompletion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "gpt-3.5-turbo",
-    });
+    const response = await axios.post(
+      "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct",
+      { inputs: prompt },
+      {
+        headers: {
+          Authorization: `Bearer ${HF_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    res.json({ reply: chatCompletion.choices[0].message.content.trim() });
+    res.json({ reply: response.data?.[0]?.generated_text || "No reply." });
   } catch (err) {
     console.error("AI Error:", err.message);
     res.status(500).json({ error: "Failed to get AI response" });
