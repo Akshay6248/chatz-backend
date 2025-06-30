@@ -9,6 +9,9 @@ const UserSchema = new mongoose.Schema({
   isAdmin:    { type: Boolean, default: false },
   isOnline:   { type: Boolean, default: false },
   isBanned:   { type: Boolean, default: false },
+  isMuted:    { type: Boolean, default: false },       // ✅ for mute
+  isGhosted:  { type: Boolean, default: false },       // ✅ for ghost
+  socketId:   { type: String, default: "" },           // ✅ for real-time targeting
   rank:       { type: String },
   actions:    { type: Array, default: [] },
   createdAt:  { type: Date, default: Date.now },

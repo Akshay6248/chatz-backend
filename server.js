@@ -23,6 +23,8 @@ require("dotenv").config();
 const app = express();
 const server = http.createServer(app);
 
+const { setupSocket } = require("./socket");
+
 // CORS origin (frontend)
 const CLIENT_ORIGIN = process.env.CORS_ORIGIN || "https://akchat.surge.sh";
 
