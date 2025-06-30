@@ -18,13 +18,35 @@ function setupSocket(server) {
       await User.findByIdAndUpdate(userId, { socketId: socket.id });
     });
 
-    // On disconnect: clear socketId
+    // Admin actions
+    socket.on("admin-action", async ({ userId, action }) => {
+      try {
+        const targetUser = await User.findById(userId);
+        if (targetUser?.socketId) {
+          const targetSocket = io.sockets.sockets.get(targetUser.socketId);
+          if (targetSocket) {
+            if (action === "kick") {
+              targetSocket.emit("kicked", { reason: "You have been kicked by admin." });
+              targetSocket.disconnect();
+            } else if (action === "mute") {
+              targetSocket.emit("muted", { duration: 300 });
+            } else if (action === "ghost") {
+              targetSocket.emit("ghosted");
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Admin action failed:", err);
+      }
+    });
+
     socket.on("disconnect", async () => {
       const user = await User.findOneAndUpdate(
         { socketId: socket.id },
-        { socketId: "" }
+        { socketId: "", isOnline: false, lastSeen: new Date() }
       );
       if (user) {
+        io.emit("update_user_status");
         console.log(`🔴 ${user.username} disconnected`);
       }
     });
@@ -33,5 +55,4 @@ function setupSocket(server) {
   return io;
 }
 
-// Export functions
 module.exports = { setupSocket, getIO: () => io };
